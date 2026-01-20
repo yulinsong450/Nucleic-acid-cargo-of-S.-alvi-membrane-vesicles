@@ -1,0 +1,193 @@
+---
+title: "R scripts for data visualization and statistical analysis of S. alvi sRNA"
+author: "Yulin Song"
+date: "2026-01"
+---
+
+```{r cutadaptor_15nt}
+
+library(tidyverse)
+
+trimming_data <- read_csv("YS_G_trimming.csv")
+
+trimming_colors <- c("#97ca3d","#9a1e21","grey")
+
+trimming_data_tidy <- trimming_data %>%
+    pivot_longer(names_to = "all_reads", values_to = "reads", cols = -sample) %>%
+    mutate(all_reads = factor(all_reads, levels = c("trimmed_reads", "too_short_reads", "no_adapter_reads")))
+
+trimming_bar_plot <- ggplot(trimming_data_tidy, 
+                            aes(x = factor(sample, levels = rev(unique(sample))), y = reads, fill = all_reads)) +
+    geom_bar(stat = "identity", position = position_stack(reverse = TRUE)) +
+    coord_flip() +
+    scale_fill_manual(values = trimming_colors) +
+    scale_y_continuous(labels = scales::label_number(scale_cut = scales::cut_si(""))) +
+    labs(title = "",
+         x = "",
+         y = "Number of reads",
+         fill = "") +
+    theme_minimal() +
+    theme(panel.grid.major.y = element_blank(),
+          axis.text.y = element_text(margin = margin(r = -20)))
+trimming_bar_plot
+
+```
+
+
+```{r bowtie1_aligning}
+
+library(tidyverse)
+library(ggrepel)
+library(patchwork)
+library(ggbreak)
+
+aligning_colors <- c("#9a72c7", "#78B82D", "#53a8e1", "grey")
+
+aligning_data <- read_csv("YS_G_aligning.csv")
+  
+aligning_data_tidy <- aligning_data %>%
+    pivot_longer(names_to = "category", values_to = "reads", cols = -sample) %>%
+    mutate(category = factor(category, levels = c("aligned_to_chromosome", "aligned_to_GFP", "aligned_to_plasmid_backbone", "unaligned"))) %>%
+    group_by(sample) %>%
+    mutate(percentage_all = (reads / sum(reads)) * 100,
+           percentage_aligned = ifelse(category != "unaligned", (reads / sum(reads[category != "unaligned"])) * 100, NA)) %>%
+    ungroup()
+  
+  
+# Bar plot for all reads
+aligning_bar_plot_all <- ggplot(aligning_data_tidy, 
+                       aes(x = factor(sample, levels = rev(unique(sample))), y = percentage_all, fill = category)) +
+    geom_bar(stat = "identity", position = position_stack(reverse = TRUE)) +
+    geom_text_repel(aes(label = sprintf("%.1f%%", percentage_all)), 
+                    position = position_stack(vjust = 0.5, reverse = TRUE), 
+                    size = 3, color = "white", box.padding = 0, angle = 0, hjust = 0) +
+    coord_flip() + 
+    scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+    scale_fill_manual(values = aligning_colors) +
+    labs(title = "", x = "", y = "", fill = "Category") +
+    theme_minimal() +
+    theme(panel.grid.major.y = element_blank(),
+          axis.text.y = element_text(margin = margin(r = -20)))
+aligning_bar_plot_all
+  
+# Bar plot for aligned reads
+aligning_bar_plot_aligned <- ggplot(aligning_data_tidy, 
+                           aes(x = factor(sample, levels = rev(unique(sample))), y = percentage_aligned, fill = category)) +
+    geom_bar(stat = "identity", position = position_stack(reverse = TRUE)) +
+    geom_text_repel(aes(label = sprintf("%.1f%%", percentage_aligned)), 
+                    position = position_stack(vjust = 0.5, reverse = TRUE), 
+                    size = 3, color = "white", box.padding = 0, angle = 0, hjust = 0) + 
+    coord_flip() + 
+    scale_y_continuous(labels = scales::percent_format(scale = 1)) +
+    scale_fill_manual(values = aligning_colors) +
+    labs(title = "", x = "", y = "", fill = "Category") +
+    theme_minimal() +
+    theme(panel.grid.major.y = element_blank(),
+          axis.text.y = element_text(margin = margin(r = -20)))
+aligning_bar_plot_aligned
+
+
+
+# Filter out unaligned
+aligned_data <- aligning_data_tidy %>%
+  filter(category != "unaligned") %>%
+  mutate(group = str_extract(sample, "^[^-]+"))
+# Aggregate data
+aligned_data_agg <- aligned_data %>%
+  group_by(group,category) %>%
+  summarise(mean_percent = mean(percentage_aligned), sd_percent = sd(percentage_aligned))
+
+# Plot aligned percent
+aligning_percent_plot <- ggplot(aligned_data_agg, aes(x = category, y = mean_percent, fill = group)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.8) +
+  geom_errorbar(aes(ymin = mean_percent - sd_percent, ymax = mean_percent + sd_percent),
+                position = position_dodge(width = 0.8), width = 0.3, color = "black", alpha = 0.8) +
+  geom_jitter(data = aligned_data, aes(x = category, y = percentage_aligned),
+              position = position_jitterdodge(jitter.width = 0.3, dodge.width = 0.8),
+              alpha = 0.8, size = 3, shape = 21) +
+  theme_classic() +
+  labs(x = "", y = "Percent of aligned RNA reads", fill = "") +
+  ylim(0,100) +
+  scale_y_break(c(20, 80), space = 0.2) +
+  scale_fill_manual(values = c("#bcaed1","#90C786")) +
+  scale_x_discrete(labels = c(expression(atop(italic("S. alvi"), "chromosome")), 
+                              "GFP", expression(atop("Plasmid", "backbone")))) +
+  theme(axis.line.y.right = element_blank(), 
+        axis.ticks.y.right = element_blank(), 
+        axis.text.y.right = element_blank(), 
+        axis.title.y.right = element_blank())
+aligning_percent_plot
+
+```
+
+```{r P}
+
+aligned_data_GFP <- aligned_data %>%
+  filter(category == "aligned_to_GFP") %>%
+  mutate(id = str_extract(sample, "[^-]+$"))
+
+shapiro.test(aligned_data_GFP$percentage_aligned[aligned_data_GFP$group == "Cells"])
+# W = 0.94999, p-value = 0.5693
+shapiro.test(aligned_data_GFP$percentage_aligned[aligned_data_GFP$group == "MVs"])
+# W = 0.79564, p-value = 0.1041
+
+aligned_data_GFP_wide <- pivot_wider(aligned_data_GFP, id_cols = id, names_from = group, values_from = percentage_aligned)
+
+t.test(aligned_data_GFP_wide$Cells, aligned_data_GFP_wide$MVs, paired = T)
+# data:  aligned_data_GFP_wide$Cells and aligned_data_GFP_wide$MVs
+# t = 1.8508, df = 2, p-value = 0.2054
+# alternative hypothesis: true mean difference is not equal to 0
+# 95 percent confidence interval:
+#  -6.056904 15.201045
+# sample estimates:
+# mean difference 
+#         4.57207
+
+```
+
+```{r aligned_read_length}
+
+library(ggplot2)
+library(ggpubr)
+
+arl_data <- read.csv("YS_G_aligned_read_length_distribution.csv", sep = ",", header = TRUE)
+
+# Convert `sample` and `category` columns to factors with appropriate levels
+arl_data$Sample <- factor(arl_data$Sample, levels = unique(arl_data$Sample))
+arl_data$Category <- factor(arl_data$Category, levels = c("NZ_CP007446.1", "GFP_wPT", "pDS-noGFPw"))
+
+# Define custom colors for the categories
+custom_colors <- c("#9a72c7", "#78B82D", "#53a8e1")
+
+# List for plots
+plot_list <- list()
+
+# Loop through each unique sample
+for (sample in unique(arl_data$Sample)) {
+  # Generate the ggplot for the current sample
+  plot <- ggplot(arl_data[arl_data$Sample == sample, ], aes(x = Length, y = Count, fill = Category)) +
+    geom_bar(stat = "identity", position = position_stack(reverse = TRUE)) +
+    scale_fill_manual(values = custom_colors, name = "Category",
+                      labels = c("aligned to chromosome", "aligned to GFP", "aligned to plasmid backbone")) +
+    labs(title = sample, 
+         # title = sample_mapping[[as.character(sample)]]
+         x = "Read Length", 
+         y = "Number of Reads") +
+    theme_minimal() +
+    theme(legend.position = "none")  # Suppress legends for individual plots
+  
+  # Add the plot to the list with the sample name as the key
+  plot_list[[sample]] <- plot
+}
+
+# Combine all the plots into a 3x2 grid with a single legend
+combined_plot <- ggarrange(
+  plotlist = plot_list, 
+  ncol = 3, 
+  nrow = 2, 
+  common.legend = TRUE, 
+  legend = "right"
+)
+combined_plot
+
+```

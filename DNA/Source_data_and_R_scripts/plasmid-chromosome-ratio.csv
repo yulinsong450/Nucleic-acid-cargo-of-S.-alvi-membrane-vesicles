@@ -1,0 +1,13 @@
+﻿group,sample,replicon,value
+Cells,Cells-G1,Chromosome,1
+Cells,Cells-G2,Chromosome,1
+Cells,Cells-G3,Chromosome,1
+Cells,Cells-G1,Plasmid,4.13
+Cells,Cells-G2,Plasmid,5.31
+Cells,Cells-G3,Plasmid,6.57
+MVs,MVs-G1,Chromosome,1
+MVs,MVs-G2,Chromosome,1
+MVs,MVs-G3,Chromosome,1
+MVs,MVs-G1,Plasmid,19.7
+MVs,MVs-G2,Plasmid,16.58
+MVs,MVs-G3,Plasmid,23.51

@@ -1,0 +1,50 @@
+YS_G_trimmed_bowtie1_v0_align_to_B2_GFPw_pDS
+
+
+##########
+
+Cells-G1
+# reads processed: 6286564
+# reads with at least one alignment: 3067666 (48.80%)
+# reads that failed to align: 3218898 (51.20%)
+Reported 3067666 alignments
+
+##########
+
+Cells-G2
+# reads processed: 6186851
+# reads with at least one alignment: 3094872 (50.02%)
+# reads that failed to align: 3091979 (49.98%)
+Reported 3094872 alignments
+
+##########
+
+Cells-G3
+# reads processed: 6514838
+# reads with at least one alignment: 3192296 (49.00%)
+# reads that failed to align: 3322542 (51.00%)
+Reported 3192296 alignments
+
+##########
+
+MVs-G1
+# reads processed: 6492428
+# reads with at least one alignment: 2473144 (38.09%)
+# reads that failed to align: 4019284 (61.91%)
+Reported 2473144 alignments
+
+##########
+
+MVs-G2
+# reads processed: 7847023
+# reads with at least one alignment: 2970567 (37.86%)
+# reads that failed to align: 4876456 (62.14%)
+Reported 2970567 alignments
+
+##########
+
+MVs-G3
+# reads processed: 6151281
+# reads with at least one alignment: 2401986 (39.05%)
+# reads that failed to align: 3749295 (60.95%)
+Reported 2401986 alignments

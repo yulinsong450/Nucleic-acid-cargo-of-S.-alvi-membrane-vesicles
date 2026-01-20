@@ -1,0 +1,72 @@
+---
+title: "R scripts for data visualization and statistical analysis of S. alvi DNA"
+author: "Yulin Song"
+date: "2026-01"
+---
+
+```{r plasmid_chromosome_ratio}
+
+library(tidyverse)
+
+MVgp <- read.csv("plasmid-chromosome-ratio.csv", head = T, sep = ",")
+
+# Aggregate data
+MVgp_agg <- MVgp %>%
+  group_by(group,replicon) %>%
+  summarise(mean_value = mean(value), sd_value = sd(value))
+
+# Plot all
+MVgp_plot <- ggplot(MVgp_agg, aes(x = group, y = mean_value, fill = replicon)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.8) +
+  geom_errorbar(aes(ymin = mean_value - sd_value, ymax = mean_value + sd_value),
+                position = position_dodge(width = 0.8), width = 0.3, color = "black", alpha = 0.8) +
+  geom_jitter(data = MVgp, aes(x = group, y = value, fill = replicon),
+              position = position_jitterdodge(jitter.width = 0.3, dodge.width = 0.8),
+              alpha = 0.8, size = 3, shape = 21) +
+  labs(x = "", y = "Relative copy number", fill = "Replicon") +
+  scale_fill_manual(values = c("#90C786", "#bcaed1")) +
+  scale_y_continuous(limits = c(0,30), breaks = seq(0, 30, by = 5)) + 
+  theme_classic()
+MVgp_plot
+
+
+MVgp_plasmid <- subset(MVgp, replicon == "Plasmid")
+MVgp_agg_plasmid <- subset(MVgp_agg, replicon == "Plasmid")
+
+# Plot ratio
+MVgp_plot_plasmid <- ggplot(MVgp_agg_plasmid, aes(x = group, y = mean_value)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.6, fill = "darkgrey") +
+  geom_errorbar(aes(ymin = mean_value - sd_value, ymax = mean_value + sd_value),
+                position = position_dodge(width = 0.8), width = 0.3, color = "black", alpha = 0.8) +
+  geom_jitter(data = MVgp_plasmid, aes(x = group, y = value), fill = "white",
+              position = position_jitter(width = 0.3),
+              alpha = 0.8, size = 3, shape = 21) +
+  labs(x = "", y = "Ratio of plasmid copy number to\nchromosome copy number") +
+  scale_y_continuous(limits = c(0,30), breaks = seq(0, 30, by = 5)) + 
+  theme_classic()
+MVgp_plot_plasmid
+
+
+
+shapiro.test(MVgp_plasmid$value[MVgp_plasmid$group == "Cells"])
+# W = 0.99964, p-value = 0.9639
+shapiro.test(MVgp_plasmid$value[MVgp_plasmid$group == "MVs"])
+# W = 0.99671, p-value = 0.8903
+
+MVgp_plasmid <- MVgp_plasmid %>%
+  mutate(id = str_extract(sample, "[^-]+$"))
+
+MVgp_plasmid_wide <- pivot_wider(MVgp_plasmid, id_cols = id, names_from = group, values_from = value)
+
+# Statistical analysis: paired Student's t-test
+t.test(MVgp_plasmid_wide$Cells, MVgp_plasmid_wide$MVs, paired = T)
+# data:  MVgp_plasmid_wide$Cells and MVgp_plasmid_wide$MVs
+# t = -8.5437, df = 2, p-value = 0.01342
+# alternative hypothesis: true mean difference is not equal to 0
+# 95 percent confidence interval:
+#  -21.942617  -7.244049
+# sample estimates:
+# mean difference 
+#       -14.59333
+
+```

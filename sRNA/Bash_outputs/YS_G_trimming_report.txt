@@ -1,0 +1,30 @@
+
+
+Cells-G1.fastq.gz
+status	in_reads	in_bp	too_short	too_long	too_many_n	out_reads	w/adapters	qualtrim_bp	out_bp
+OK	6895720	517179000	354466	0	0	6286564	6641030	1506344	142373762
+
+
+Cells-G2.fastq.gz
+status	in_reads	in_bp	too_short	too_long	too_many_n	out_reads	w/adapters	qualtrim_bp	out_bp
+OK	6708712	503153400	324545	0	0	6186851	6511396	1061237	139658551
+
+
+Cells-G3.fastq.gz
+status	in_reads	in_bp	too_short	too_long	too_many_n	out_reads	w/adapters	qualtrim_bp	out_bp
+OK	6926719	519503925	305777	0	0	6514838	6820615	1663321	148172359
+
+
+MVs-G1.fastq.gz
+status	in_reads	in_bp	too_short	too_long	too_many_n	out_reads	w/adapters	qualtrim_bp	out_bp
+OK	7038819	527911425	443600	0	0	6492428	6936028	2847968	145393254
+
+
+MVs-G2.fastq.gz
+status	in_reads	in_bp	too_short	too_long	too_many_n	out_reads	w/adapters	qualtrim_bp	out_bp
+OK	9089452	681708900	1094005	0	0	7847023	8941028	3288364	167282961
+
+
+MVs-G3.fastq.gz
+status	in_reads	in_bp	too_short	too_long	too_many_n	out_reads	w/adapters	qualtrim_bp	out_bp
+OK	7015657	526174275	748479	0	0	6151281	6899760	1918987	135668662
